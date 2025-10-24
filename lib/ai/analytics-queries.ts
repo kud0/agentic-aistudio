@@ -128,7 +128,7 @@ export class AnalyticsQueries {
 
       const validLatencies = logs
         .map((log) => log.latency_ms)
-        .filter((lat) => lat != null && lat > 0);
+        .filter((lat): lat is number => lat != null && lat > 0);
 
       const avgLatency =
         validLatencies.length > 0
@@ -230,8 +230,8 @@ export class AnalyticsQueries {
       return (
         logs?.map((log) => ({
           id: log.id,
-          agent_type: log.agent_type,
-          provider: log.provider,
+          agent_type: log.agent_type as AgentType,
+          provider: log.provider as ProviderName,
           model: log.model,
           tokens: log.total_tokens,
           cost: log.cost_usd,

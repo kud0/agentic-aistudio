@@ -1,0 +1,574 @@
+openapi: 3.0.0
+info:
+  title: AI Provider API
+  version: 1.0.0
+  description: |
+    Comprehensive API for the Strategist Agent Platform providing AI-powered research, strategy, and critique capabilities with automatic provider fallback, cost tracking, and quality assurance.
+
+    ## Features
+    - Multi-provider support (Grok, Claude, OpenAI)
+    - Automatic fallback chain for resilience
+    - Real-time streaming responses
+    - Cost tracking and budget enforcement
+    - Response caching for optimization
+    - Quality scoring and validation
+    - Analytics and usage reporting
+
+  contact:
+    name: API Support
+    email: support@strategistagent.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.strategistagent.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: AI Generation
+    description: AI-powered content generation endpoints
+  - name: Analytics
+    description: Usage analytics and cost tracking
+  - name: Health
+    description: System health and status monitoring
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/ai/research:
+    post:
+      tags:
+        - AI Generation
+      summary: Generate research analysis
+      description: |
+        Analyzes a creative brief and generates comprehensive research including market insights, competitor analysis, and audience research.
+
+        This endpoint uses the configured AI provider (with automatic fallback) to generate high-quality research outputs.
+      operationId: generateResearch
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectId
+                - brief
+              properties:
+                projectId:
+                  type: string
+                  format: uuid
+                  description: Unique identifier for the project
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                brief:
+                  type: string
+                  description: Creative brief content to analyze
+                  example: "Launch campaign for eco-friendly sneakers targeting Gen Z consumers..."
+                  minLength: 50
+                  maxLength: 50000
+            example:
+              projectId: "550e8400-e29b-41d4-a716-446655440000"
+              brief: "Launch campaign for eco-friendly sneakers targeting Gen Z consumers. Brand values: sustainability, authenticity, innovation."
+      responses:
+        '200':
+          description: Research generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchResponse'
+              example:
+                success: true
+                outputId: "660e8400-e29b-41d4-a716-446655440001"
+                content: |
+                  # Market Research Analysis
+
+                  ## Market Insights
+                  - Sustainable fashion market growing at 9.7% CAGR
+                  - Gen Z willing to pay 10% premium for eco-friendly products
+
+                  ## Competitor Analysis
+                  1. Allbirds: Leading sustainable footwear brand...
+                  2. Veja: French eco-sneaker brand...
+
+                  ## Target Audience
+                  - Age: 18-25
+                  - Values: Environmental consciousness, social justice
+                metadata:
+                  provider: "grok"
+                  model: "grok-2-latest"
+                  cost: 0.0234
+                  cached: false
+                  tokensUsed: 4680
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Project not found"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/ai/strategy:
+    post:
+      tags:
+        - AI Generation
+      summary: Generate brand strategy
+      description: |
+        Creates a comprehensive brand strategy based on research data, including positioning, messaging, and tactical recommendations.
+      operationId: generateStrategy
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectId
+                - researchData
+              properties:
+                projectId:
+                  type: string
+                  format: uuid
+                  description: Project ID
+                researchData:
+                  type: string
+                  description: Research output from /api/ai/research
+            example:
+              projectId: "550e8400-e29b-41d4-a716-446655440000"
+              researchData: "# Market Research Analysis\n\n## Market Insights..."
+      responses:
+        '200':
+          description: Strategy generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/ai/critique:
+    post:
+      tags:
+        - AI Generation
+      summary: Generate quality critique
+      description: |
+        Analyzes and critiques generated strategy, providing quality assessment, improvement suggestions, and validation.
+      operationId: generateCritique
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectId
+                - strategyData
+              properties:
+                projectId:
+                  type: string
+                  format: uuid
+                strategyData:
+                  type: string
+                  description: Strategy output to critique
+            example:
+              projectId: "550e8400-e29b-41d4-a716-446655440000"
+              strategyData: "# Brand Strategy\n\n## Positioning..."
+      responses:
+        '200':
+          description: Critique generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/ai/stream:
+    post:
+      tags:
+        - AI Generation
+      summary: Stream AI generation in real-time
+      description: |
+        Streams AI-generated content in real-time using Server-Sent Events (SSE). This provides a better user experience by showing content as it's generated.
+
+        The response is a stream of JSON objects, each containing a chunk of generated content.
+      operationId: streamGeneration
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectId
+                - task
+                - prompt
+              properties:
+                projectId:
+                  type: string
+                  format: uuid
+                task:
+                  type: string
+                  enum: [research, strategy, critique]
+                  description: Type of AI task to perform
+                prompt:
+                  type: string
+                  description: Main prompt for generation
+                systemPrompt:
+                  type: string
+                  description: Optional system prompt for role definition
+            example:
+              projectId: "550e8400-e29b-41d4-a716-446655440000"
+              task: "research"
+              prompt: "Analyze this brief: Launch campaign for eco-friendly sneakers..."
+              systemPrompt: "You are an expert market researcher specializing in sustainable brands."
+      responses:
+        '200':
+          description: Streaming response (Server-Sent Events)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  Stream of JSON objects, one per line, each prefixed with "data: "
+
+                  Format: `data: {"content": "chunk text", "isComplete": false, "tokensSoFar": 150}`
+              example: |
+                data: {"content": "# Market", "isComplete": false, "tokensSoFar": 3}
+
+                data: {"content": " Research\n\n", "isComplete": false, "tokensSoFar": 6}
+
+                data: {"content": "## Market Insights", "isComplete": false, "tokensSoFar": 15}
+
+                data: {"isComplete": true, "outputId": "660e8400-e29b-41d4-a716-446655440001", "totalTokens": 4680, "cost": 0.0234}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/usage:
+    get:
+      tags:
+        - Analytics
+      summary: Get usage analytics
+      description: |
+        Retrieves comprehensive usage analytics including cost breakdown by provider, model, agent type, and time period.
+
+        Supports filtering by project and timeframe.
+      operationId: getUsageAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: timeframe
+          in: query
+          description: Time period for analytics
+          required: false
+          schema:
+            type: string
+            enum: ['24h', '7d', '30d']
+            default: '7d'
+        - name: projectId
+          in: query
+          description: Filter by specific project
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+              example:
+                summary:
+                  totalCost: 12.45
+                  totalTokens: 2489600
+                  totalRequests: 156
+                  avgLatency: 3420
+                  cacheHitRate: 42
+                breakdown:
+                  byProvider:
+                    grok: 8.20
+                    claude: 4.25
+                  byModel:
+                    "grok-2-latest": 8.20
+                    "claude-3-5-sonnet": 4.25
+                  byAgent:
+                    research: 5.60
+                    strategy: 4.80
+                    critique: 2.05
+                  byDay:
+                    "2025-10-18": 1.80
+                    "2025-10-19": 2.10
+                    "2025-10-20": 1.95
+                    "2025-10-21": 2.30
+                    "2025-10-22": 1.85
+                    "2025-10-23": 1.70
+                    "2025-10-24": 0.75
+                expensivePrompts:
+                  - agentType: "research"
+                    provider: "grok"
+                    model: "grok-2-latest"
+                    cost: 0.156
+                    tokens: 31200
+                    timestamp: "2025-10-24T10:23:45Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Supabase authentication token. Include in Authorization header as:
+        `Authorization: Bearer YOUR_SUPABASE_TOKEN`
+
+  schemas:
+    ResearchResponse:
+      type: object
+      required:
+        - success
+        - outputId
+        - content
+        - metadata
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the operation was successful
+          example: true
+        outputId:
+          type: string
+          format: uuid
+          description: Unique identifier for the generated output
+        content:
+          type: string
+          description: Generated content (Markdown format)
+        metadata:
+          type: object
+          required:
+            - provider
+            - model
+            - cost
+            - cached
+            - tokensUsed
+          properties:
+            provider:
+              type: string
+              description: LLM provider used
+              enum: [grok, claude, openai]
+            model:
+              type: string
+              description: Specific model used
+              example: "grok-2-latest"
+            cost:
+              type: number
+              format: double
+              description: Cost in USD
+              example: 0.0234
+            cached:
+              type: boolean
+              description: Whether response was served from cache
+              example: false
+            tokensUsed:
+              type: integer
+              description: Total tokens consumed
+              example: 4680
+
+    AnalyticsResponse:
+      type: object
+      required:
+        - summary
+        - breakdown
+        - expensivePrompts
+      properties:
+        summary:
+          type: object
+          properties:
+            totalCost:
+              type: number
+              format: double
+              description: Total cost in USD
+            totalTokens:
+              type: integer
+              description: Total tokens used
+            totalRequests:
+              type: integer
+              description: Total API requests
+            avgLatency:
+              type: integer
+              description: Average latency in milliseconds
+            cacheHitRate:
+              type: integer
+              description: Cache hit rate percentage (0-100)
+        breakdown:
+          type: object
+          properties:
+            byProvider:
+              type: object
+              additionalProperties:
+                type: number
+              description: Cost breakdown by provider
+            byModel:
+              type: object
+              additionalProperties:
+                type: number
+              description: Cost breakdown by model
+            byAgent:
+              type: object
+              additionalProperties:
+                type: number
+              description: Cost breakdown by agent type
+            byDay:
+              type: object
+              additionalProperties:
+                type: number
+              description: Cost breakdown by day (ISO date)
+        expensivePrompts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpensivePrompt'
+          description: Top 10 most expensive prompts
+
+    ExpensivePrompt:
+      type: object
+      properties:
+        agentType:
+          type: string
+          example: "research"
+        provider:
+          type: string
+          example: "grok"
+        model:
+          type: string
+          example: "grok-2-latest"
+        cost:
+          type: number
+          format: double
+          example: 0.156
+        tokens:
+          type: integer
+          example: 31200
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-10-24T10:23:45Z"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+        details:
+          type: string
+          description: Additional error details (only in development)
+        totalCost:
+          type: number
+          description: Current total cost (for budget errors)
+        userTotal:
+          type: number
+          description: User's total cost (for budget errors)
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "projectId and brief are required"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+
+    Forbidden:
+      description: Access forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Forbidden"
+
+    RateLimitExceeded:
+      description: Budget or rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            projectBudget:
+              summary: Project budget exceeded
+              value:
+                error: "Project budget exceeded. Max: $10"
+                totalCost: 10.42
+            userBudget:
+              summary: User monthly budget exceeded
+              value:
+                error: "Monthly budget exceeded. Max: $100"
+                userTotal: 103.56
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Internal server error"
+            details: "Stack trace available in development mode"

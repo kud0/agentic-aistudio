@@ -1,0 +1,731 @@
+{
+  "project": "ai-provider-architecture",
+  "version": "1.0",
+  "description": "Agent task definitions for building AI Provider Architecture",
+  "agents": [
+    {
+      "id": "agent-1-architect",
+      "type": "system-architect",
+      "name": "Architecture Designer",
+      "priority": "critical",
+      "phase": 1,
+      "estimatedDays": 2,
+      "capabilities": [
+        "system design",
+        "TypeScript",
+        "architecture patterns",
+        "provider abstraction",
+        "API design"
+      ],
+      "tasks": [
+        {
+          "id": "task-1-1",
+          "title": "Design provider abstraction architecture",
+          "description": "Create unified interface for all LLM providers using Strategy pattern",
+          "deliverables": [
+            "lib/ai/types.ts (TypeScript interfaces)",
+            "Architecture diagrams",
+            "Design documentation"
+          ],
+          "acceptanceCriteria": [
+            "LLMProvider interface defined",
+            "GenerateParams and LLMResponse types complete",
+            "Fallback chain design documented",
+            "Circuit breaker pattern designed"
+          ]
+        },
+        {
+          "id": "task-1-2",
+          "title": "Design configuration system",
+          "description": "Create flexible configuration for provider routing and budgets",
+          "deliverables": [
+            "Configuration schema",
+            "Environment variable documentation"
+          ],
+          "acceptanceCriteria": [
+            "Provider configs defined",
+            "Task-based routing schema",
+            "Budget limits configurable"
+          ]
+        }
+      ],
+      "dependencies": [],
+      "outputs": [
+        "swarm/architecture/types",
+        "swarm/architecture/design-doc"
+      ]
+    },
+    {
+      "id": "agent-2-templates",
+      "type": "base-template-generator",
+      "name": "Template Generator",
+      "priority": "high",
+      "phase": 1,
+      "estimatedDays": 2,
+      "capabilities": [
+        "boilerplate generation",
+        "code scaffolding",
+        "template creation",
+        "TypeScript"
+      ],
+      "tasks": [
+        {
+          "id": "task-2-1",
+          "title": "Generate provider templates",
+          "description": "Create boilerplate for Grok, Claude, and OpenAI providers",
+          "deliverables": [
+            "lib/ai/providers/base.ts",
+            "lib/ai/providers/grok.ts (template)",
+            "lib/ai/providers/claude.ts (template)",
+            "lib/ai/providers/index.ts"
+          ],
+          "acceptanceCriteria": [
+            "All files have proper TypeScript types",
+            "Error handling patterns included",
+            "JSDoc comments present",
+            "TODO markers for implementation"
+          ]
+        },
+        {
+          "id": "task-2-2",
+          "title": "Generate API route templates",
+          "description": "Create Next.js API route boilerplate",
+          "deliverables": [
+            "app/api/ai/research/route.ts",
+            "app/api/ai/strategy/route.ts",
+            "app/api/ai/critique/route.ts",
+            "app/api/ai/stream/route.ts"
+          ],
+          "acceptanceCriteria": [
+            "Authentication middleware included",
+            "Error handling patterns",
+            "Budget checking logic",
+            "Response formatting"
+          ]
+        },
+        {
+          "id": "task-2-3",
+          "title": "Generate configuration and prompt templates",
+          "description": "Create config files and prompt templates",
+          "deliverables": [
+            "lib/ai/config.ts",
+            "lib/ai/prompts/research.ts",
+            "lib/ai/prompts/strategy.ts",
+            "lib/ai/prompts/critique.ts",
+            ".env.example"
+          ],
+          "acceptanceCriteria": [
+            "All environment variables documented",
+            "Prompt templates with versioning",
+            "Configuration validation included"
+          ]
+        }
+      ],
+      "dependencies": [],
+      "outputs": [
+        "swarm/templates/providers",
+        "swarm/templates/api-routes",
+        "swarm/templates/config"
+      ]
+    },
+    {
+      "id": "agent-3-coder",
+      "type": "coder",
+      "name": "Provider Implementer",
+      "priority": "critical",
+      "phase": 1,
+      "estimatedDays": 3,
+      "capabilities": [
+        "TypeScript",
+        "API integration",
+        "async/await",
+        "error handling",
+        "LLM APIs"
+      ],
+      "tasks": [
+        {
+          "id": "task-3-1",
+          "title": "Implement Grok provider",
+          "description": "Full implementation of Grok (X.AI) LLM provider",
+          "deliverables": [
+            "lib/ai/providers/grok.ts (complete)"
+          ],
+          "acceptanceCriteria": [
+            "Chat completions API working",
+            "Streaming support implemented",
+            "Token counting accurate",
+            "Cost calculation correct",
+            "Error handling robust"
+          ]
+        },
+        {
+          "id": "task-3-2",
+          "title": "Implement Claude provider",
+          "description": "Full implementation of Anthropic Claude provider",
+          "deliverables": [
+            "lib/ai/providers/claude.ts (complete)"
+          ],
+          "acceptanceCriteria": [
+            "Messages API working",
+            "Streaming support implemented",
+            "Tool use supported (optional)",
+            "Cost calculation accurate"
+          ]
+        },
+        {
+          "id": "task-3-3",
+          "title": "Implement provider manager",
+          "description": "Core orchestration logic for provider fallback and retries",
+          "deliverables": [
+            "lib/ai/manager.ts (complete)"
+          ],
+          "acceptanceCriteria": [
+            "Fallback chain works",
+            "Exponential backoff retries",
+            "Circuit breaker integration",
+            "Budget checking",
+            "Cache integration",
+            "Cost tracking"
+          ]
+        },
+        {
+          "id": "task-3-4",
+          "title": "Implement supporting components",
+          "description": "Circuit breaker, cache, and cost tracker",
+          "deliverables": [
+            "lib/ai/circuit-breaker.ts",
+            "lib/ai/cache.ts",
+            "lib/ai/cost-tracker.ts"
+          ],
+          "acceptanceCriteria": [
+            "Circuit breaker has 3 states",
+            "Cache supports TTL and LRU",
+            "Cost tracker logs to Supabase"
+          ]
+        }
+      ],
+      "dependencies": [
+        "agent-1-architect",
+        "agent-2-templates"
+      ],
+      "outputs": [
+        "swarm/code/providers",
+        "swarm/code/manager",
+        "swarm/code/utilities"
+      ]
+    },
+    {
+      "id": "agent-4-backend",
+      "type": "backend-dev",
+      "name": "API Developer",
+      "priority": "critical",
+      "phase": 1,
+      "estimatedDays": 3,
+      "capabilities": [
+        "Next.js",
+        "API routes",
+        "Supabase",
+        "authentication",
+        "database queries"
+      ],
+      "tasks": [
+        {
+          "id": "task-4-1",
+          "title": "Implement AI agent endpoints",
+          "description": "Create research, strategy, and critique API endpoints",
+          "deliverables": [
+            "app/api/ai/research/route.ts",
+            "app/api/ai/strategy/route.ts",
+            "app/api/ai/critique/route.ts"
+          ],
+          "acceptanceCriteria": [
+            "Supabase authentication works",
+            "Project ownership verified",
+            "Budget enforcement active",
+            "LLM provider manager integration",
+            "Output saved to database",
+            "Usage logged correctly"
+          ]
+        },
+        {
+          "id": "task-4-2",
+          "title": "Implement streaming endpoint",
+          "description": "Server-Sent Events for real-time LLM responses",
+          "deliverables": [
+            "app/api/ai/stream/route.ts"
+          ],
+          "acceptanceCriteria": [
+            "SSE working correctly",
+            "Streams LLM chunks in real-time",
+            "Complete output saved on finish",
+            "Usage logged after streaming"
+          ]
+        },
+        {
+          "id": "task-4-3",
+          "title": "Implement analytics endpoint",
+          "description": "Aggregate and serve usage analytics",
+          "deliverables": [
+            "app/api/analytics/usage/route.ts"
+          ],
+          "acceptanceCriteria": [
+            "Cost aggregation by provider/model/agent",
+            "Daily/weekly/monthly trends",
+            "Top 10 expensive prompts",
+            "Cache hit rate calculation"
+          ]
+        },
+        {
+          "id": "task-4-4",
+          "title": "Database migrations",
+          "description": "Create Supabase schema for AI provider system",
+          "deliverables": [
+            "supabase/migrations/001_ai_provider_schema.sql"
+          ],
+          "acceptanceCriteria": [
+            "llm_usage_logs table created",
+            "quality_scores table created",
+            "provider_health table created",
+            "response_cache table created",
+            "Indexes added",
+            "RLS policies configured"
+          ]
+        }
+      ],
+      "dependencies": [
+        "agent-3-coder"
+      ],
+      "outputs": [
+        "swarm/code/api-routes",
+        "swarm/database/migrations"
+      ]
+    },
+    {
+      "id": "agent-5-analyzer",
+      "type": "code-analyzer",
+      "name": "Quality Analyst",
+      "priority": "high",
+      "phase": 2,
+      "estimatedDays": 3,
+      "capabilities": [
+        "analytics",
+        "monitoring",
+        "quality scoring",
+        "data analysis",
+        "LLM evaluation"
+      ],
+      "tasks": [
+        {
+          "id": "task-5-1",
+          "title": "Implement quality scorer",
+          "description": "Auto-rate LLM outputs for quality",
+          "deliverables": [
+            "lib/ai/quality-scorer.ts"
+          ],
+          "acceptanceCriteria": [
+            "Scores completeness, coherence, actionability",
+            "Uses cheap model to rate expensive outputs",
+            "Saves scores to quality_scores table",
+            "Auto-flags if score < 60",
+            "Returns reasoning"
+          ]
+        },
+        {
+          "id": "task-5-2",
+          "title": "Implement provider health monitoring",
+          "description": "Track provider uptime and performance",
+          "deliverables": [
+            "lib/ai/health-monitor.ts"
+          ],
+          "acceptanceCriteria": [
+            "Checks error rates",
+            "Calculates average latency",
+            "Determines status (healthy/degraded/down)",
+            "Saves to provider_health table",
+            "Cron job for periodic checks"
+          ]
+        },
+        {
+          "id": "task-5-3",
+          "title": "Build analytics queries",
+          "description": "Optimize database queries for analytics dashboard",
+          "deliverables": [
+            "lib/ai/analytics-queries.ts"
+          ],
+          "acceptanceCriteria": [
+            "Fast aggregation queries",
+            "Efficient indexing",
+            "Cached results",
+            "Support multiple timeframes"
+          ]
+        }
+      ],
+      "dependencies": [
+        "agent-4-backend"
+      ],
+      "outputs": [
+        "swarm/code/quality-scoring",
+        "swarm/code/health-monitoring"
+      ]
+    },
+    {
+      "id": "agent-6-tester",
+      "type": "tester",
+      "name": "Test Engineer",
+      "priority": "critical",
+      "phase": 1,
+      "estimatedDays": 5,
+      "capabilities": [
+        "Jest",
+        "unit testing",
+        "integration testing",
+        "mocking",
+        "test automation"
+      ],
+      "tasks": [
+        {
+          "id": "task-6-1",
+          "title": "Write provider unit tests",
+          "description": "Test all provider implementations",
+          "deliverables": [
+            "lib/ai/__tests__/providers/grok.test.ts",
+            "lib/ai/__tests__/providers/claude.test.ts",
+            "lib/ai/__tests__/manager.test.ts",
+            "lib/ai/__tests__/mocks.ts"
+          ],
+          "acceptanceCriteria": [
+            "Provider generate() tested",
+            "Provider stream() tested",
+            "Cost calculation tested",
+            "Error handling tested",
+            "Mock providers created"
+          ]
+        },
+        {
+          "id": "task-6-2",
+          "title": "Write manager and utility tests",
+          "description": "Test fallback, circuit breaker, cache",
+          "deliverables": [
+            "lib/ai/__tests__/circuit-breaker.test.ts",
+            "lib/ai/__tests__/cache.test.ts",
+            "lib/ai/__tests__/cost-tracker.test.ts"
+          ],
+          "acceptanceCriteria": [
+            "Fallback chain works",
+            "Circuit breaker opens/closes correctly",
+            "Cache hit/miss logic tested",
+            "Cost tracking accurate"
+          ]
+        },
+        {
+          "id": "task-6-3",
+          "title": "Write API integration tests",
+          "description": "Test all Next.js API routes",
+          "deliverables": [
+            "app/api/ai/__tests__/research.test.ts",
+            "app/api/ai/__tests__/strategy.test.ts",
+            "app/api/ai/__tests__/stream.test.ts",
+            "app/api/analytics/__tests__/usage.test.ts"
+          ],
+          "acceptanceCriteria": [
+            "Authentication tested",
+            "Budget enforcement tested",
+            "Database integration tested",
+            "Error responses tested"
+          ]
+        },
+        {
+          "id": "task-6-4",
+          "title": "Write E2E tests",
+          "description": "Full workflow testing",
+          "deliverables": [
+            "e2e/full-workflow.test.ts"
+          ],
+          "acceptanceCriteria": [
+            "Research → Strategy → Critique flow works",
+            "Streaming works end-to-end",
+            "Analytics dashboard loads",
+            "Cost under $5 per workflow"
+          ]
+        },
+        {
+          "id": "task-6-5",
+          "title": "Load testing",
+          "description": "Test system under concurrent load",
+          "deliverables": [
+            "Load test results report"
+          ],
+          "acceptanceCriteria": [
+            "10 concurrent requests handled",
+            "Circuit breaker activates under failures",
+            "Budget enforcement works under load",
+            "No memory leaks"
+          ]
+        }
+      ],
+      "dependencies": [
+        "agent-3-coder",
+        "agent-4-backend"
+      ],
+      "outputs": [
+        "swarm/tests/unit",
+        "swarm/tests/integration",
+        "swarm/tests/e2e",
+        "swarm/tests/load"
+      ]
+    },
+    {
+      "id": "agent-7-docs",
+      "type": "api-docs",
+      "name": "Documentation Writer",
+      "priority": "medium",
+      "phase": 2,
+      "estimatedDays": 3,
+      "capabilities": [
+        "OpenAPI",
+        "technical writing",
+        "documentation",
+        "examples",
+        "guides"
+      ],
+      "tasks": [
+        {
+          "id": "task-7-1",
+          "title": "Create OpenAPI specification",
+          "description": "Document all API endpoints in OpenAPI format",
+          "deliverables": [
+            "docs/api-spec.yaml"
+          ],
+          "acceptanceCriteria": [
+            "All endpoints documented",
+            "Request/response schemas defined",
+            "Error responses documented",
+            "Authentication specified",
+            "Examples provided"
+          ]
+        },
+        {
+          "id": "task-7-2",
+          "title": "Write API usage guide",
+          "description": "How to use the AI provider API",
+          "deliverables": [
+            "docs/api-usage.md"
+          ],
+          "acceptanceCriteria": [
+            "Authentication explained",
+            "Example requests (curl, TypeScript)",
+            "Rate limits documented",
+            "Budget management explained"
+          ]
+        },
+        {
+          "id": "task-7-3",
+          "title": "Write configuration guide",
+          "description": "How to configure providers and routing",
+          "deliverables": [
+            "docs/configuration.md"
+          ],
+          "acceptanceCriteria": [
+            "All environment variables documented",
+            "Provider setup explained",
+            "Task routing configuration",
+            "Budget configuration",
+            "Caching setup"
+          ]
+        },
+        {
+          "id": "task-7-4",
+          "title": "Write deployment guide",
+          "description": "Step-by-step deployment instructions",
+          "deliverables": [
+            "docs/deployment.md"
+          ],
+          "acceptanceCriteria": [
+            "Vercel deployment steps",
+            "Supabase setup",
+            "n8n configuration",
+            "Environment secrets",
+            "Testing deployment",
+            "Troubleshooting section"
+          ]
+        }
+      ],
+      "dependencies": [
+        "agent-4-backend"
+      ],
+      "outputs": [
+        "swarm/docs/api-spec",
+        "swarm/docs/guides"
+      ]
+    },
+    {
+      "id": "agent-8-reviewer",
+      "type": "reviewer",
+      "name": "Code Reviewer",
+      "priority": "high",
+      "phase": 2,
+      "estimatedDays": 2,
+      "capabilities": [
+        "code review",
+        "optimization",
+        "security",
+        "best practices",
+        "performance"
+      ],
+      "tasks": [
+        {
+          "id": "task-8-1",
+          "title": "Code quality review",
+          "description": "Review all code for production readiness",
+          "deliverables": [
+            "Code review report"
+          ],
+          "acceptanceCriteria": [
+            "TypeScript types complete",
+            "Error handling consistent",
+            "Logging in place",
+            "Code organization clean",
+            "DRY principles followed"
+          ]
+        },
+        {
+          "id": "task-8-2",
+          "title": "Security review",
+          "description": "Audit for security vulnerabilities",
+          "deliverables": [
+            "Security audit report"
+          ],
+          "acceptanceCriteria": [
+            "API keys protected",
+            "Input validation present",
+            "SQL injection prevented",
+            "Rate limiting implemented",
+            "RLS policies correct"
+          ]
+        },
+        {
+          "id": "task-8-3",
+          "title": "Performance review",
+          "description": "Optimize for production performance",
+          "deliverables": [
+            "Performance optimization report"
+          ],
+          "acceptanceCriteria": [
+            "Database queries optimized",
+            "Caching strategy efficient",
+            "API response times <10s",
+            "Memory usage acceptable",
+            "Token usage optimized"
+          ]
+        },
+        {
+          "id": "task-8-4",
+          "title": "Test coverage review",
+          "description": "Ensure comprehensive testing",
+          "deliverables": [
+            "Test coverage report"
+          ],
+          "acceptanceCriteria": [
+            "Unit test coverage >80%",
+            "Edge cases covered",
+            "Integration tests complete",
+            "E2E scenarios tested"
+          ]
+        }
+      ],
+      "dependencies": [
+        "agent-3-coder",
+        "agent-4-backend",
+        "agent-5-analyzer",
+        "agent-6-tester"
+      ],
+      "outputs": [
+        "swarm/reviews/code-quality",
+        "swarm/reviews/security",
+        "swarm/reviews/performance"
+      ]
+    }
+  ],
+  "executionStrategy": {
+    "type": "parallel",
+    "phases": [
+      {
+        "phase": 1,
+        "name": "Foundation",
+        "duration": "Week 1",
+        "parallelAgents": [
+          "agent-1-architect",
+          "agent-2-templates"
+        ],
+        "sequentialAfter": [
+          "agent-3-coder",
+          "agent-4-backend",
+          "agent-6-tester"
+        ]
+      },
+      {
+        "phase": 2,
+        "name": "Quality & Analytics",
+        "duration": "Week 2",
+        "parallelAgents": [
+          "agent-5-analyzer",
+          "agent-6-tester",
+          "agent-7-docs"
+        ],
+        "sequentialAfter": [
+          "agent-8-reviewer"
+        ]
+      },
+      {
+        "phase": 3,
+        "name": "Integration & Polish",
+        "duration": "Week 3-4",
+        "parallelTasks": [
+          "n8n integration",
+          "frontend integration",
+          "load testing",
+          "final documentation"
+        ]
+      }
+    ]
+  },
+  "coordination": {
+    "sharedMemoryKeys": {
+      "progress": "swarm/progress/{agent-id}",
+      "code": "swarm/code/{file-path}",
+      "issues": "swarm/issues/{issue-id}",
+      "tests": "swarm/tests/{suite-name}",
+      "reviews": "swarm/reviews/{review-type}"
+    },
+    "communication": "via mcp__claude-flow__memory_usage",
+    "dailyStandup": true,
+    "blockersEscalation": "immediate"
+  },
+  "successMetrics": {
+    "week1": [
+      "Provider abstraction functional",
+      "Fallback working",
+      "Cost tracking active",
+      "Unit tests >80% coverage"
+    ],
+    "week2": [
+      "API routes working",
+      "Streaming functional",
+      "Quality scoring active",
+      "Analytics dashboard live"
+    ],
+    "week3_4": [
+      "n8n integration complete",
+      "E2E test <5min",
+      "Load test passing",
+      "Documentation complete"
+    ],
+    "performance": {
+      "apiResponseTime": "<10s",
+      "streamingLatency": "<500ms",
+      "costPerProject": "<$2",
+      "uptime": ">99%",
+      "qualityScore": ">70"
+    }
+  }
+}
