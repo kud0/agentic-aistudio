@@ -23,55 +23,73 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          name: string;
-          description: string | null;
-          status: 'draft' | 'running' | 'completed' | 'failed';
+          title: string;
+          brief: string;
+          status: 'pending' | 'running' | 'complete' | 'error' | 'cancelled';
           created_at: string;
           updated_at: string;
+          completed_at: string | null;
+          budget_limit: number;
+          metadata: Json;
         };
         Insert: {
           id?: string;
           user_id: string;
-          name: string;
-          description?: string | null;
-          status?: 'draft' | 'running' | 'completed' | 'failed';
+          title: string;
+          brief: string;
+          status?: 'pending' | 'running' | 'complete' | 'error' | 'cancelled';
           created_at?: string;
           updated_at?: string;
+          completed_at?: string | null;
+          budget_limit?: number;
+          metadata?: Json;
         };
         Update: {
           id?: string;
           user_id?: string;
-          name?: string;
-          description?: string | null;
-          status?: 'draft' | 'running' | 'completed' | 'failed';
+          title?: string;
+          brief?: string;
+          status?: 'pending' | 'running' | 'complete' | 'error' | 'cancelled';
           created_at?: string;
           updated_at?: string;
+          completed_at?: string | null;
+          budget_limit?: number;
+          metadata?: Json;
         };
       };
       outputs: {
         Row: {
           id: string;
           project_id: string;
-          section: string;
+          section: 'research' | 'strategy' | 'critique';
           content: string;
+          version: number;
+          parent_id: string | null;
           created_at: string;
           updated_at: string;
+          metadata: Json;
         };
         Insert: {
           id?: string;
           project_id: string;
-          section: string;
+          section: 'research' | 'strategy' | 'critique';
           content: string;
+          version?: number;
+          parent_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          metadata?: Json;
         };
         Update: {
           id?: string;
           project_id?: string;
-          section?: string;
+          section?: 'research' | 'strategy' | 'critique';
           content?: string;
+          version?: number;
+          parent_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          metadata?: Json;
         };
       };
       llm_usage_logs: {
