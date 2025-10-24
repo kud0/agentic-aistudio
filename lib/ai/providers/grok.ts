@@ -7,6 +7,8 @@ import { LLMProvider, GenerateParams, LLMResponse, LLMChunk } from '../types';
 
 export class GrokProvider implements LLMProvider {
   name = 'grok';
+  models = ['grok-4-fast-reasoning', 'grok-2-latest', 'grok-2-mini'];
+  enabled = true;
   private apiKey: string;
   private baseUrl = 'https://api.x.ai/v1';
 
@@ -33,8 +35,7 @@ export class GrokProvider implements LLMProvider {
             { role: 'user', content: params.prompt }
           ],
           temperature: params.temperature ?? 0.7,
-          max_tokens: params.maxTokens ?? 2000,
-          ...(params.tools ? { tools: params.tools } : {})
+          max_tokens: params.maxTokens ?? 2000
         })
       });
 
@@ -48,18 +49,22 @@ export class GrokProvider implements LLMProvider {
 
       return {
         content: data.choices[0].message.content,
-        tokensUsed: {
-          prompt: data.usage.prompt_tokens,
-          completion: data.usage.completion_tokens,
-          total: data.usage.total_tokens
+        usage: {
+          inputTokens: data.usage.prompt_tokens,
+          outputTokens: data.usage.completion_tokens,
+          totalTokens: data.usage.total_tokens
         },
         model: data.model,
         provider: 'grok',
-        finishReason: this.mapFinishReason(data.choices[0].finish_reason),
         cost: this.estimateCost(data.usage.total_tokens, model),
-        latency,
-        toolCalls: data.choices[0].message.tool_calls,
-        metadata: { rawResponse: data }
+        latencyMs: latency,
+        cached: false,
+        timestamp: new Date(),
+        metadata: {
+          rawResponse: data,
+          finishReason: this.mapFinishReason(data.choices[0].finish_reason),
+          toolCalls: data.choices[0].message.tool_calls
+        }
       };
     } catch (error) {
       if (error instanceof Error) {
@@ -69,7 +74,7 @@ export class GrokProvider implements LLMProvider {
     }
   }
 
-  async *stream(params: GenerateParams): AsyncIterator<LLMChunk> {
+  async *stream(params: GenerateParams): AsyncIterableIterator<LLMChunk> {
     const model = params.model || 'grok-2-latest';
 
     try {
@@ -114,7 +119,7 @@ export class GrokProvider implements LLMProvider {
           if (line.startsWith('data: ')) {
             const data = line.slice(6);
             if (data === '[DONE]') {
-              yield { content: '', isComplete: true };
+              yield { content: '', done: true };
               return;
             }
 
@@ -122,7 +127,7 @@ export class GrokProvider implements LLMProvider {
               const parsed = JSON.parse(data);
               const content = parsed.choices[0]?.delta?.content || '';
               if (content) {
-                yield { content, isComplete: false };
+                yield { content, done: false };
               }
             } catch (e) {
               // Skip invalid JSON
@@ -139,7 +144,7 @@ export class GrokProvider implements LLMProvider {
     }
   }
 
-  countTokens(text: string): number {
+  async countTokens(text: string): Promise<number> {
     // Rough estimation: ~4 chars per token (standard approximation)
     return Math.ceil(text.length / 4);
   }
@@ -150,6 +155,18 @@ export class GrokProvider implements LLMProvider {
 
   getModelList(): string[] {
     return ['grok-2-latest', 'grok-2-mini'];
+  }
+
+  calculateCost(inputTokens: number, outputTokens: number, model: string): number {
+    // Grok pricing (per 1M tokens)
+    const pricing: Record<string, { input: number; output: number }> = {
+      'grok-4-fast-reasoning': { input: 2, output: 10 },
+      'grok-2-latest': { input: 2, output: 10 },
+      'grok-2-mini': { input: 0.5, output: 2 }
+    };
+
+    const modelPricing = pricing[model] || pricing['grok-4-fast-reasoning'];
+    return (inputTokens / 1_000_000) * modelPricing.input + (outputTokens / 1_000_000) * modelPricing.output;
   }
 
   estimateCost(tokens: number, model: string): number {
@@ -171,7 +188,18 @@ export class GrokProvider implements LLMProvider {
     );
   }
 
-  private mapFinishReason(reason: string): LLMResponse['finishReason'] {
+  async getHealth() {
+    // Simple health check
+    return {
+      provider: 'grok' as const,
+      status: 'healthy' as const,
+      error_rate: 0,
+      avg_latency_ms: 0,
+      last_checked: new Date()
+    };
+  }
+
+  private mapFinishReason(reason: string): string {
     switch (reason) {
       case 'stop': return 'stop';
       case 'length': return 'length';

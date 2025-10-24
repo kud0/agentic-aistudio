@@ -8,6 +8,8 @@ import { LLMProvider, GenerateParams, LLMResponse, LLMChunk } from '../types';
 
 export class ClaudeProvider implements LLMProvider {
   name = 'claude';
+  models = ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'];
+  enabled = true;
   private client: Anthropic;
 
   constructor(apiKey: string) {
@@ -38,20 +40,24 @@ export class ClaudeProvider implements LLMProvider {
 
       return {
         content,
-        tokensUsed: {
-          prompt: response.usage.input_tokens,
-          completion: response.usage.output_tokens,
-          total: response.usage.input_tokens + response.usage.output_tokens
+        usage: {
+          inputTokens: response.usage.input_tokens,
+          outputTokens: response.usage.output_tokens,
+          totalTokens: response.usage.input_tokens + response.usage.output_tokens
         },
         model: response.model,
         provider: 'claude',
-        finishReason: this.mapStopReason(response.stop_reason),
         cost: this.estimateCost(
           response.usage.input_tokens + response.usage.output_tokens,
           model
         ),
-        latency,
-        metadata: { rawResponse: response }
+        latencyMs: latency,
+        cached: false,
+        timestamp: new Date(),
+        metadata: {
+          rawResponse: response,
+          finishReason: this.mapStopReason(response.stop_reason)
+        }
       };
     } catch (error) {
       if (error instanceof Error) {
@@ -61,7 +67,7 @@ export class ClaudeProvider implements LLMProvider {
     }
   }
 
-  async *stream(params: GenerateParams): AsyncIterator<LLMChunk> {
+  async *stream(params: GenerateParams): AsyncIterableIterator<LLMChunk> {
     const model = params.model || 'claude-3-5-sonnet-20241022';
 
     try {
@@ -79,12 +85,12 @@ export class ClaudeProvider implements LLMProvider {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
           yield {
             content: event.delta.text,
-            isComplete: false
+            done: false
           };
         } else if (event.type === 'message_stop') {
           yield {
             content: '',
-            isComplete: true
+            done: true
           };
         }
       }
@@ -96,13 +102,36 @@ export class ClaudeProvider implements LLMProvider {
     }
   }
 
-  countTokens(text: string): number {
+  async countTokens(text: string): Promise<number> {
     // Claude's tokenizer is similar to GPT (rough estimation)
     return Math.ceil(text.length / 4);
   }
 
   supportsFeature(feature: 'streaming' | 'tools' | 'vision'): boolean {
     return ['streaming', 'tools', 'vision'].includes(feature);
+  }
+
+  calculateCost(inputTokens: number, outputTokens: number, model: string): number {
+    // Claude pricing (per 1M tokens) - Sonnet 4
+    const pricing: Record<string, { input: number; output: number }> = {
+      'claude-3-5-sonnet-20241022': { input: 3, output: 15 },
+      'claude-3-opus-20240229': { input: 15, output: 75 },
+      'claude-3-haiku-20240307': { input: 0.25, output: 1.25 }
+    };
+
+    const modelPricing = pricing[model] || pricing['claude-3-5-sonnet-20241022'];
+    return (inputTokens / 1_000_000) * modelPricing.input + (outputTokens / 1_000_000) * modelPricing.output;
+  }
+
+  async getHealth() {
+    // Simple health check
+    return {
+      provider: 'claude' as const,
+      status: 'healthy' as const,
+      error_rate: 0,
+      avg_latency_ms: 0,
+      last_checked: new Date()
+    };
   }
 
   getModelList(): string[] {
@@ -133,7 +162,7 @@ export class ClaudeProvider implements LLMProvider {
     );
   }
 
-  private mapStopReason(reason: string | null): LLMResponse['finishReason'] {
+  private mapStopReason(reason: string | null): string {
     switch (reason) {
       case 'end_turn': return 'stop';
       case 'max_tokens': return 'length';

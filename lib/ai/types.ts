@@ -100,10 +100,10 @@ export interface LLMProvider {
    * The consumer can process each chunk in real-time (e.g., SSE to frontend).
    *
    * @param params - Normalized generation parameters
-   * @returns AsyncGenerator yielding LLMChunk objects
+   * @returns AsyncIterableIterator yielding LLMChunk objects
    * @throws {ProviderError} If streaming fails
    */
-  generateStream(params: GenerateParams): AsyncGenerator<LLMChunk, void, unknown>;
+  stream(params: GenerateParams): AsyncIterableIterator<LLMChunk>;
 
   /**
    * Count tokens in a text string
