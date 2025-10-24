@@ -8,15 +8,10 @@
  *   npm run health-check
  *
  * Or set up as a cron job (every 5 minutes):
- *   */5 * * * * cd /path/to/project && npm run health-check >> /var/log/health-check.log 2>&1
+ *   Add to crontab: cd /path/to/project && npm run health-check
  *
  * Or use Vercel Cron (vercel.json):
- *   {
- *     "crons": [{
- *       "path": "/api/cron/health-check",
- *       "schedule": "*/5 * * * *"
- *     }]
- *   }
+ *   Add cron configuration for /api/cron/health-check endpoint
  */
 
 import { healthMonitor } from '../lib/ai/health-monitor';

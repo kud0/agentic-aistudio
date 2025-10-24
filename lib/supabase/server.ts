@@ -19,16 +19,15 @@ import type { Database } from '@/types/supabase';
  * @example
  * ```typescript
  * import { createClient } from '@/lib/supabase/server'
- * import { cookies } from 'next/headers'
  *
  * export async function GET(request: Request) {
- *   const supabase = createClient(cookies())
+ *   const supabase = await createClient()
  *   const { data: { user } } = await supabase.auth.getUser()
  *   // ...
  * }
  * ```
  */
-export function createClient(cookieStore: ReturnType<typeof cookies>) {
+export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -37,6 +36,8 @@ export function createClient(cookieStore: ReturnType<typeof cookies>) {
       'Missing Supabase environment variables. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.'
     );
   }
+
+  const cookieStore = await cookies();
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {

@@ -235,7 +235,7 @@ ${content}
         flagged_for_review: score.flagged_for_review,
         reasoning: score.reasoning,
         created_at: score.created_at,
-      });
+      } as any);
 
       if (error) {
         console.error('Failed to save quality score:', error);

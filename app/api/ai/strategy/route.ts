@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     let researchContext = body.researchData || '';
 
     if (body.researchId && !researchContext) {
-      const supabase = createClient(cookies());
+      const supabase = await createClient();
       const { data: research, error: fetchError } = await supabase
         .from('outputs')
         .select('content')

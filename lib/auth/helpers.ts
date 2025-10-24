@@ -33,14 +33,14 @@ export async function checkProjectBudget(
   userId: string,
   maxBudget: number = 100.0
 ): Promise<BudgetCheck> {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
 
   // Verify ownership first
   const { data: project, error: projectError } = await supabase
     .from('projects')
     .select('user_id')
     .eq('id', projectId)
-    .single();
+    .single() as { data: { user_id: string } | null; error: any };
 
   if (projectError || !project || project.user_id !== userId) {
     throw new Error('Project not found or access denied');
@@ -51,7 +51,7 @@ export async function checkProjectBudget(
     .from('llm_usage_logs')
     .select('cost_usd')
     .eq('project_id', projectId)
-    .eq('user_id', userId);
+    .eq('user_id', userId) as { data: { cost_usd: number }[] | null; error: any };
 
   if (error) {
     console.error('Error fetching project budget:', error);
@@ -84,7 +84,7 @@ export async function checkUserBudget(
   userId: string,
   maxBudget: number = 500.0
 ): Promise<BudgetCheck> {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -94,7 +94,7 @@ export async function checkUserBudget(
     .from('llm_usage_logs')
     .select('cost_usd')
     .eq('user_id', userId)
-    .gte('created_at', thirtyDaysAgo.toISOString());
+    .gte('created_at', thirtyDaysAgo.toISOString()) as { data: { cost_usd: number }[] | null; error: any };
 
   if (error) {
     console.error('Error fetching user budget:', error);
@@ -163,7 +163,7 @@ export async function checkBudgets(
 export async function logLLMUsage(
   params: Omit<Inserts<'llm_usage_logs'>, 'id' | 'created_at' | 'total_tokens'>
 ): Promise<void> {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
 
   const { error } = await supabase.from('llm_usage_logs').insert({
     ...params,
@@ -188,7 +188,7 @@ export async function saveLLMOutput(params: {
   section: string;
   content: string;
 }): Promise<{ id: string }> {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('outputs')
@@ -196,7 +196,7 @@ export async function saveLLMOutput(params: {
       project_id: params.projectId,
       section: params.section,
       content: params.content,
-    })
+    } as any)
     .select('id')
     .single();
 
@@ -221,22 +221,22 @@ export async function updateProjectStatus(
   userId: string,
   status: 'draft' | 'running' | 'completed' | 'failed'
 ): Promise<void> {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
 
   // Verify ownership
   const { data: project, error: ownershipError } = await supabase
     .from('projects')
     .select('user_id')
     .eq('id', projectId)
-    .single();
+    .single() as { data: { user_id: string } | null; error: any };
 
   if (ownershipError || !project || project.user_id !== userId) {
     throw new Error('Project not found or access denied');
   }
 
   // Update status
-  const { error } = await supabase
-    .from('projects')
+  const { error } = await (supabase
+    .from('projects') as any)
     .update({
       status,
       updated_at: new Date().toISOString(),
@@ -261,7 +261,7 @@ export async function getUserUsageStats(
   userId: string,
   timeframe: '24h' | '7d' | '30d' | 'all' = '30d'
 ) {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
 
   let dateFilter = new Date();
   if (timeframe === '24h') {
@@ -281,7 +281,7 @@ export async function getUserUsageStats(
     query.gte('created_at', dateFilter.toISOString());
   }
 
-  const { data: logs, error } = await query;
+  const { data: logs, error } = await query as { data: any[] | null; error: any };
 
   if (error) {
     console.error('Error fetching usage stats:', error);

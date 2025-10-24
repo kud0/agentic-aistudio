@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     let strategyContext = body.strategyData || '';
 
     if (body.strategyId && !strategyContext) {
-      const supabase = createClient(cookies());
+      const supabase = await createClient();
       const { data: strategy, error: fetchError } = await supabase
         .from('outputs')
         .select('content')

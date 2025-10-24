@@ -50,7 +50,7 @@ export class ForbiddenError extends AuthError {
  * ```
  */
 export async function getAuthUser(): Promise<User> {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
   const {
     data: { user },
     error,
@@ -119,15 +119,15 @@ export async function verifyProjectOwnership(
   projectId: string,
   userId: string
 ): Promise<void> {
-  const supabase = createClient(cookies());
+  const supabase = await createClient();
 
   const { data: project, error } = await supabase
     .from('projects')
     .select('user_id')
     .eq('id', projectId)
-    .single();
+    .single() as { data: { user_id: string } | null; error: any };
 
-  if (error) {
+  if (error || !project) {
     throw new ForbiddenError('Project not found');
   }
 
@@ -157,15 +157,15 @@ export async function requireProjectOwnership(projectId: string): Promise<
 > {
   try {
     const user = await getAuthUser();
-    const supabase = createClient(cookies());
+    const supabase = await createClient();
 
     const { data: project, error } = await supabase
       .from('projects')
       .select('id, user_id')
       .eq('id', projectId)
-      .single();
+      .single() as { data: { id: string; user_id: string } | null; error: any };
 
-    if (error) {
+    if (error || !project) {
       return {
         user: null,
         project: null,
